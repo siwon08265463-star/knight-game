@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>⚔️ 기사의 모험 - 전투 & 광산</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b1018;color:#fff;font-family:Arial,sans-serif;text-align:center}
+h1{margin:14px 0 8px}
+#top{width:920px;max-width:96%;margin:auto;display:flex;justify-content:center;flex-wrap:wrap;gap:6px}
+.stat{background:#1b2430;border:1px solid #354252;padding:8px 11px;border-radius:9px;font-size:14px}
+.stat b{color:#ffd84d}
+button{border:0;border-radius:9px;padding:10px 13px;margin:4px;font-size:14px;font-weight:bold;cursor:pointer}
+button:hover{transform:scale(1.03)}
+button:disabled{background:#444!important;color:#999;cursor:not-allowed;transform:none}
+#startBtn{background:#27ae60;color:#fff}#pauseBtn{background:#e67e22;color:#fff}
+#speedBtn{background:#2980b9;color:#fff}#mineBtn{background:#795548;color:#fff}
+#gachaBtn{background:#8e44ad;color:#fff}#chanceBtn{background:#34495e;color:#fff}
+#soundBtn{background:#16a085;color:#fff}#resetStageBtn{background:#c0392b;color:#fff}
+#game{position:relative;width:800px;max-width:96%;height:600px;margin:10px auto;overflow:hidden;border:4px solid #59636f;border-radius:15px;background:linear-gradient(to bottom,#172538 0%,#30465a 62%,#62472f 62%,#402c1d 100%)}
+#moon{position:absolute;right:35px;top:25px;font-size:58px;opacity:.8}
+#knight{position:absolute;left:50%;bottom:32px;transform:translateX(-50%);font-size:76px;z-index:30;transition:transform .1s}
+.knightAttack{transform:translateX(-50%) translateX(22px) rotate(-7deg)}
+#playerHPBox{position:absolute;left:50%;bottom:112px;transform:translateX(-50%);width:250px;z-index:40}
+#playerHPText{font-size:14px;font-weight:bold;margin-bottom:4px}
+#playerHPBar{height:20px;background:#111;border:2px solid white;border-radius:20px;overflow:hidden}
+#playerHP{width:100%;height:100%;background:#2ecc71;transition:width .2s}
+.monster{position:absolute;width:85px;height:105px;text-align:center;font-size:62px;z-index:20}
+.monsterHP{position:absolute;left:7px;top:-2px;width:70px;height:8px;background:#111;border-radius:10px;overflow:hidden}
+.monsterHPInner{width:100%;height:100%;background:#e74c3c}
+.boss{font-size:82px!important}.bossName{position:absolute;width:200px;left:50%;top:62px;transform:translateX(-50%);font-size:15px;font-weight:bold;color:#ff6565}
+.damage,.goldEffect{position:absolute;pointer-events:none;font-weight:bold;z-index:100;animation:up .65s forwards}
+.damage{color:#ffe14a;font-size:20px}.critical{color:#ff5555;font-size:25px}.goldEffect{color:#ffd700;font-size:18px}
+@keyframes up{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-48px)}}
+#log{width:800px;max-width:96%;height:105px;margin:8px auto;padding:9px;background:#151a21;border-radius:10px;text-align:left;overflow-y:auto;font-size:13px}
+.logLine{margin:3px 0}
+.overlay,.modal{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(12,16,23,.97);border-radius:18px;z-index:2000;box-shadow:0 0 50px rgba(0,0,0,.8)}
+.overlay{width:520px;max-width:90%;padding:30px}.overlay h2{font-size:45px;margin:5px}.overGame h2{color:#ff5555}.clear h2{color:gold}
+.modal{width:600px;max-width:94%;max-height:90vh;overflow:auto;padding:22px;border:2px solid #795548}
+.modal h2{margin-top:0}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.resource{background:#202a35;border:1px solid #3a4755;padding:12px;border-radius:10px}
+.resource b{display:block;font-size:20px;margin-bottom:4px}
+.mineScene{font-size:70px;padding:12px}
+.progress{height:14px;background:#111;border-radius:10px;overflow:hidden;margin:8px 0}
+.progress>div{height:100%;width:0;background:#d6a35b}
+.small{font-size:12px;color:#bfc7d1}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid #3a4654;padding:7px}th{background:#252f3b}
+.result{min-height:100px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:bold}
+
+/* 📱 모바일 최적화 */
+html,body{width:100%;min-height:100%;overflow-x:hidden}
+body{padding-bottom:20px}
+#top{width:100%;max-width:700px;padding:0 6px;gap:5px}
+.stat{padding:7px 8px;font-size:12px}
+button{padding:9px 10px;font-size:13px;margin:3px 1px}
+#game{width:min(800px,96vw);height:min(600px,125vw);min-height:420px;margin:8px auto;border-width:3px}
+#knight{font-size:58px;bottom:24px}
+#playerHPBox{bottom:88px;width:58vw;max-width:250px}
+#log{width:min(800px,96vw);height:90px;font-size:12px}
+.modal{width:94vw;max-height:88vh;padding:15px}
+.modal h2{font-size:22px}
+.grid{grid-template-columns:repeat(2,1fr);gap:6px}
+.resource{padding:9px;font-size:13px}
+.resource b{font-size:18px}
+table{font-size:12px}
+th,td{padding:5px}
+.overlay{padding:22px}
+@media (max-width:480px){
+  h1{font-size:23px;margin:10px 0 6px}
+  .stat{font-size:11px;padding:6px 7px}
+  button{font-size:12px;padding:8px 8px}
+  #game{height:125vw;min-height:430px;max-height:600px}
+  #moon{font-size:42px;right:20px;top:15px}
+  #knight{font-size:52px}
+  .monster{transform:scale(.82);transform-origin:bottom center}
+  .boss{font-size:68px!important}
+  .bossName{font-size:12px}
+}
+
+</style>
+</head>
+<body>
+
+<h1>⚔️ 기사의 모험</h1>
+
+<div id="top">
+  <div class="stat">🗺️ 스테이지 <b id="stage">1</b> / 100</div>
+  <div class="stat">👾 현재 <b id="stageKills">0</b> / 10</div>
+  <div class="stat">❤️ HP <b id="hpText">100</b> / 100</div>
+  <div class="stat">💰 <b id="money">0</b></div>
+  <div class="stat">👾 누적 <b id="kills">0</b></div>
+  <div class="stat">🎟️ <b id="tickets">0</b> <span style="font-size:11px;color:#aaa">(다음 <b id="nextTicketKills">10</b>마리)</span></div>
+  <div class="stat">⚔️ 공격력 <b id="attack">25</b></div>
+  <div class="stat">🔨 검 <b id="upgradeLevel">0</b>강</div>
+  <div class="stat">⛏️ 곡괭이 <b id="pickLevel">1</b>강</div>
+  <div class="stat">⚡ <b id="speedText">1x</b></div>
+</div>
+
+<div>
+  <button id="startBtn" onclick="startGame()">▶ 게임 시작</button>
+  <button id="pauseBtn" onclick="togglePause()">⏸️ 일시정지</button>
+  <button id="speedBtn" onclick="changeSpeed()">⚡ 배속</button>
+  <button id="mineBtn" onclick="openMine()">⛏️ 광산</button>
+  <button id="gachaBtn" onclick="openGacha()">🎲 뽑기</button>
+  <button id="chanceBtn" onclick="openChance()">📊 확률표</button>
+  <button id="soundBtn" onclick="toggleSound()">🔊 브금 ON</button>
+  <button id="resetStageBtn" onclick="resetStage()">🔄 스테이지 초기화</button>
+</div>
+
+<audio id="bgm"></audio>
+
+<div id="game">
+  <div id="moon">🌙</div>
+  <div id="playerHPBox">
+    <div id="playerHPText">❤️ 100 / 100</div>
+    <div id="playerHPBar"><div id="playerHP"></div></div>
+  </div>
+  <div id="knight">🛡️🧑‍⚔️</div>
+
+  <div id="gameOver" class="overlay overGame">
+    <h2>GAME OVER</h2>
+    <p>💀 기사가 쓰러졌습니다.</p>
+    <p>도달 스테이지: <b id="overStage">1</b></p>
+    <p>누적 처치: <b id="overKills">0</b></p>
+    <button onclick="restartBattle()">🔄 다시 전투</button>
+  </div>
+
+  <div id="clearScreen" class="overlay clear">
+    <h2>🏆 CLEAR!</h2>
+    <p>100 스테이지를 모두 돌파했습니다!</p>
+    <p>누적 처치: <b id="clearKills">0</b></p>
+    <button onclick="restartBattle()">🔄 다시 플레이</button>
+  </div>
+</div>
+
+<div id="log"><div class="logLine">⚔️ 게임 시작 버튼을 눌러주세요.</div></div>
+
+<!-- 광산 -->
+<div id="mineBox" class="modal">
+  <h2>⛏️ 광산</h2>
+  <div class="mineScene">🧑‍🌾⛏️ 🪨💎</div>
+  <p>광산 깊이: <b id="mineDepth">1</b>층</p>
+  <p>자동 채굴 상태: <b id="mineStatus">대기 중</b></p>
+  <div class="progress"><div id="mineProgress"></div></div>
+  <p class="small">전투 중에도 광산은 자동으로 계속 채굴됩니다.</p>
+  <div class="grid">
+    <div class="resource">🪨<b id="coal">0</b>석탄</div>
+    <div class="resource">⛓️<b id="iron">0</b>철</div>
+    <div class="resource">🟡<b id="goldOre">0</b>금</div>
+    <div class="resource">💎<b id="diamond">0</b>다이아</div>
+  </div>
+  <p>광석 판매 예상 금액: <b id="oreValue">0</b>💰</p>
+  <button onclick="sellOre()" style="background:#c27c00;color:white">💰 광석 전부 판매</button>
+  <button onclick="upgradePick()" style="background:#6d4c41;color:white">⛏️ 곡괭이 강화</button>
+  <button onclick="mineDeeper()" style="background:#455a64;color:white">🕳️ 더 깊이 내려가기</button>
+  <button onclick="closeMine()">닫기</button>
+</div>
+
+<!-- 뽑기 -->
+<div id="gachaBox" class="modal">
+  <h2>🎲 확률 뽑기</h2>
+  <p>보유 뽑기권: <b id="gachaTickets">0</b></p><p class="small">다음 뽑기권: 몬스터 <b id="gachaNextKills">10</b>마리 처치</p>
+  <div id="gachaResult" class="result">뽑기를 시작하세요!</div>
+  <button onclick="drawGacha()" style="background:#8e44ad;color:white">🎲 뽑기</button>
+  <button onclick="closeGacha()">닫기</button>
+</div>
+
+<!-- 확률표 -->
+<div id="chanceBox" class="modal">
+  <h2>📊 뽑기 확률표</h2>
+  <table>
+    <tr><th>등급</th><th>아이템</th><th>확률</th><th>공격력</th></tr>
+    <tr><td>⚪ 일반</td><td>🗡️ 철검</td><td>50%</td><td>+10</td></tr>
+    <tr><td>🔵 희귀</td><td>🔷 희귀한 검</td><td>30%</td><td>+35</td></tr>
+    <tr><td>🟣 영웅</td><td>💎 영웅의 검</td><td>15%</td><td>+80</td></tr>
+    <tr><td>🟡 전설</td><td>🌟 전설의 검</td><td>4.5%</td><td>+200</td></tr>
+    <tr><td>🔴 신화</td><td>🌌 신화의 검</td><td>0.5%</td><td>+500</td></tr>
+  </table>
+  <button onclick="closeChance()">닫기</button>
+</div>
+
+<script>
+const KEY="knightGameData";
+let data=JSON.parse(localStorage.getItem(KEY))||{
+  stage:1,stageKills:0,totalKills:0,money:0,tickets:0,nextTicketKills:10,attack:25,upgradeLevel:0,
+  coal:0,iron:0,goldOre:0,diamond:0,pickLevel:1,mineDepth:1
+};
+Object.assign(data,{
+  stage:data.stage??1,stageKills:data.stageKills??0,totalKills:data.totalKills??0,nextTicketKills:data.nextTicketKills??10,
+  money:data.money??0,tickets:data.tickets??0,attack:data.attack??25,
+  upgradeLevel:data.upgradeLevel??0,coal:data.coal??0,iron:data.iron??0,
+  goldOre:data.goldOre??0,diamond:data.diamond??0,pickLevel:data.pickLevel??1,
+  mineDepth:data.mineDepth??1
+});
+
+let playerHP=100,playing=false,paused=false,gameSpeed=1,monsters=[],spawnTimer=null,attackTimer=null,mineTimer=null,mineProgress=0,soundOn=true,currentMusic=0;
+const MAX_HP=100,speedList=[1,2,3,5,10];
+const musicList=["bgm1.mp3","bgm2.mp3","bgm3.mp3","bgm4.mp3"];
+const bgm=document.getElementById("bgm");
+const game=document.getElementById("game");
+const knight=document.getElementById("knight");
+const startBtn=document.getElementById("startBtn");
+const pauseBtn=document.getElementById("pauseBtn");
+const speedBtn=document.getElementById("speedBtn");
+const mineBtn=document.getElementById("mineBtn");
+const gachaBtn=document.getElementById("gachaBtn");
+const chanceBtn=document.getElementById("chanceBtn");
+const soundBtn=document.getElementById("soundBtn");
+const gameOverBox=document.getElementById("gameOver");
+const clearScreen=document.getElementById("clearScreen");
+const overStage=document.getElementById("overStage");
+const overKills=document.getElementById("overKills");
+const clearKills=document.getElementById("clearKills");
+const stage=document.getElementById("stage");
+const stageKills=document.getElementById("stageKills");
+const hpText=document.getElementById("hpText");
+const money=document.getElementById("money");
+const kills=document.getElementById("kills");
+const tickets=document.getElementById("tickets");
+const nextTicketKills=document.getElementById("nextTicketKills");
+const attack=document.getElementById("attack");
+const upgradeLevel=document.getElementById("upgradeLevel");
+const pickLevel=document.getElementById("pickLevel");
+const speedText=document.getElementById("speedText");
+const playerHPText=document.getElementById("playerHPText");
+const playerHPBar=document.getElementById("playerHP");
+const mineBox=document.getElementById("mineBox");
+const mineDepth=document.getElementById("mineDepth");
+const mineStatus=document.getElementById("mineStatus");
+const mineProgressBar=document.getElementById("mineProgress");
+const coal=document.getElementById("coal");
+const iron=document.getElementById("iron");
+const goldOre=document.getElementById("goldOre");
+const diamond=document.getElementById("diamond");
+const oreValue=document.getElementById("oreValue");
+const gachaBox=document.getElementById("gachaBox");
+const gachaTickets=document.getElementById("gachaTickets");
+const gachaNextKills=document.getElementById("gachaNextKills");
+const gachaResult=document.getElementById("gachaResult");
+const chanceBox=document.getElementById("chanceBox");
+
+function save(){localStorage.setItem(KEY,JSON.stringify(data))}
+function log(t){let x=document.createElement("div");x.className="logLine";x.textContent=t;document.getElementById("log").prepend(x);while(document.getElementById("log").children.length>30)document.getElementById("log").lastChild.remove()}
+function updateUI(){
+  stage.textContent=data.stage;stageKills.textContent=data.stageKills;hpText.textContent=playerHP;money.textContent=data.money;kills.textContent=data.totalKills;tickets.textContent=data.tickets;nextTicketKills.textContent=data.nextTicketKills;attack.textContent=data.attack;upgradeLevel.textContent=data.upgradeLevel;pickLevel.textContent=data.pickLevel;speedText.textContent=gameSpeed+"x";
+  playerHPText.textContent=`❤️ ${playerHP} / ${MAX_HP}`;playerHPBar.style.width=(playerHP/MAX_HP*100)+"%";
+  playerHPBar.style.background=playerHP<=30?"#e74c3c":"#2ecc71";
+  coal.textContent=data.coal;iron.textContent=data.iron;goldOre.textContent=data.goldOre;diamond.textContent=data.diamond;mineDepth.textContent=data.mineDepth;
+  let value=data.coal*2+data.iron*6+data.goldOre*20+data.diamond*100;oreValue.textContent=value;gachaTickets.textContent=data.tickets;gachaNextKills.textContent=data.nextTicketKills;
+}
+function playMusic(){if(!soundOn)return;bgm.src=musicList[currentMusic];bgm.volume=.35;bgm.play().catch(()=>{})}
+bgm.addEventListener("ended",()=>{currentMusic=(currentMusic+1)%musicList.length;playMusic()});
+
+function startGame(){
+  if(playing)return;playing=true;paused=false;playerHP=MAX_HP;
+  gameOverBox.style.display="none";clearScreen.style.display="none";startBtn.disabled=true;
+  if(soundOn)playMusic();log(`⚔️ ${data.stage} 스테이지 전투 시작!`);
+  if(data.stage%20===0)log(`👑 ${data.stage} 스테이지 보스가 준비되었습니다!`);
+  spawnMonster();startTimers();startMine();updateUI();
+}
+function startTimers(){
+  clearInterval(spawnTimer);clearInterval(attackTimer);
+  spawnTimer=setInterval(()=>{if(playing&&!paused)spawnMonster()},2200/gameSpeed);
+  attackTimer=setInterval(()=>{if(playing&&!paused)autoAttack()},650/gameSpeed);
+}
+function changeSpeed(){let i=speedList.indexOf(gameSpeed);gameSpeed=speedList[(i+1)%speedList.length];if(playing)startTimers();updateUI();log(`⚡ 배속 ${gameSpeed}x`)}
+function togglePause(){if(!playing)return;paused=!paused;pauseBtn.textContent=paused?"▶️ 계속":"⏸️ 일시정지";log(paused?"⏸️ 게임 일시정지":"▶️ 게임 재개")}
+function getMonsterType(){
+  if(data.stage%20===0 && data.stageKills===9)return{emoji:"🐲",name:"보스",boss:true};
+  let r=Math.random();
+  if(data.stage>=75&&r<.15)return{emoji:"🐉",name:"드래곤",boss:false};
+  if(data.stage>=40&&r<.3)return{emoji:"👹",name:"오우거",boss:false};
+  if(data.stage>=15&&r<.4)return{emoji:"🧟",name:"좀비",boss:false};
+  return{emoji:"👾",name:"고블린",boss:false};
+}
+function spawnMonster(){
+  if(!playing||paused||monsters.length>=4||data.stage>100)return;
+  let type=getMonsterType(),m=document.createElement("div");m.className="monster";if(type.boss)m.classList.add("boss");
+  let max;
+  // 35스테이지부터 몬스터 HP가 확실히 가파르게 증가
+  if(data.stage < 35){
+    max = Math.floor(70*Math.pow(1.075,data.stage-1));
+  }else{
+    const hp35 = 70*Math.pow(1.075,34);
+    max = Math.floor(hp35*Math.pow(1.14,data.stage-35));
+  }
+  if(type.boss)max*=10;m.maxHP=max;m.hp=max;m.type=type;
+  m.innerHTML=(type.boss?`<div class="bossName">👑 ${data.stage} 스테이지 보스</div>`:"")+`<div class="monsterHP"><div class="monsterHPInner"></div></div>${type.emoji}`;
+  m.style.left=Math.random()*(game.clientWidth-85)+"px";let pos=-100;m.style.bottom=pos+"px";game.appendChild(m);monsters.push(m);
+  if(type.boss)log(`👑 ${data.stage} 스테이지 보스 등장!`);
+  let speed=(1.6+data.stage*.01)*(type.boss?.6:1);
+  function move(){
+    if(!playing||m.hp<=0||!m.isConnected)return;
+    if(!paused){pos+=speed*gameSpeed;m.style.bottom=pos+"px";if(pos>=410){monsterReachKnight(m);return}}
+    requestAnimationFrame(move);
+  }requestAnimationFrame(move);
+}
+function monsterReachKnight(m){if(!playing||m.hp<=0)return;let d=Math.floor(7+data.stage*.5);if(m.type.boss)d*=4;playerHP=Math.max(0,playerHP-d);updateUI();log(`💥 ${m.type.name} 공격! 기사 -${d}`);removeMonster(m);if(playerHP<=0)gameOver()}
+function autoAttack(){let target=null,high=-Infinity;for(const m of monsters){if(m.hp>0&&m.isConnected){let b=parseFloat(m.style.bottom);if(b>high){high=b;target=m}}}if(target)attackMonster(target)}
+function attackMonster(m){
+  if(!m||m.hp<=0)return;knight.classList.add("knightAttack");setTimeout(()=>knight.classList.remove("knightAttack"),100);
+  let crit=Math.random()<.1,d=data.attack*(crit?2:1);m.hp=Math.max(0,m.hp-d);
+  showDamage(m,d,crit);m.querySelector(".monsterHPInner").style.width=(m.hp/m.maxHP*100)+"%";if(m.hp<=0)killMonster(m)
+}
+function showDamage(m,d,crit){let e=document.createElement("div");e.className="damage"+(crit?" critical":"");e.textContent=(crit?"CRITICAL! ":"")+"-"+d;e.style.left=m.offsetLeft+20+"px";e.style.bottom=parseFloat(m.style.bottom)+70+"px";game.appendChild(e);setTimeout(()=>e.remove(),650)}
+function showGold(m,a){let e=document.createElement("div");e.className="goldEffect";e.textContent=`+${a}💰`;e.style.left=m.offsetLeft+"px";e.style.bottom=parseFloat(m.style.bottom)+40+"px";game.appendChild(e);setTimeout(()=>e.remove(),800)}
+function killMonster(m){
+  if(!monsters.includes(m))return;removeMonster(m);data.totalKills++;data.stageKills++;
+
+  let reward=Math.floor(10+data.stage*2.5);if(m.type.boss)reward*=10;data.money+=reward;showGold(m,reward);
+  // 뽑기권 조건은 10마리에서 시작해서 뽑기권을 얻을 때마다 1씩 증가
+  if(data.totalKills >= data.nextTicketKills){
+    data.tickets++;
+    log(`🎟️ 몬스터 ${data.nextTicketKills}마리 처치! 뽑기권 +1`);
+    data.nextTicketKills++;
+  }
+  log(`👾 ${m.type.name} 처치! 💰 +${reward}`);
+  if(data.stageKills>=10){
+    if(data.stage>=100){save();updateUI();showClear();return}
+    data.stage++;data.stageKills=0;log(`🔥 스테이지 ${data.stage} 진입!`);if(data.stage%20===0)log(`👑 ${data.stage} 스테이지는 보스 스테이지!`);
+  }save();updateUI()
+}
+function removeMonster(m){if(m?.parentNode)m.parentNode.removeChild(m);monsters=monsters.filter(x=>x!==m)}
+function gameOver(){
+  playing=false;paused=false;clearInterval(spawnTimer);clearInterval(attackTimer);
+  monsters.forEach(m=>m.remove());monsters=[];overStage.textContent=data.stage;overKills.textContent=data.totalKills;gameOverBox.style.display="block";startBtn.disabled=false;pauseBtn.textContent="⏸️ 일시정지";save();log("💀 GAME OVER")
+}
+function restartBattle(){gameOverBox.style.display="none";clearScreen.style.display="none";playerHP=MAX_HP;startGame()}
+function showClear(){
+  playing=false;clearInterval(spawnTimer);clearInterval(attackTimer);monsters.forEach(m=>m.remove());monsters=[];clearKills.textContent=data.totalKills;clearScreen.style.display="block";startBtn.disabled=false;save();log("🏆 100 스테이지 클리어!")
+}
+
+/* 검 강화 */
+function upgradeSword(){
+  let cost=Math.floor(100*Math.pow(1.35,data.upgradeLevel));
+  if(data.money<cost){log(`💰 골드 부족! ${cost}골드 필요`);return}
+  data.money-=cost;data.upgradeLevel++;data.attack+=25;save();updateUI();log(`⚔️ 검 ${data.upgradeLevel}강 성공! 공격력 +25`)
+}
+
+/* 광산 */
+function startMine(){
+  clearInterval(mineTimer);mineTimer=setInterval(mineTick,1000);
+}
+function mineTick(){
+  if(paused&&!playing)return;
+  mineProgress+=data.pickLevel*gameSpeed;
+  if(mineProgress>=100){
+    mineProgress=0;collectOre();
+  }
+  document.getElementById("mineProgress").style.width=Math.min(100,mineProgress)+"%";
+  mineStatus.textContent=playing?"⛏️ 채굴 중":"대기 중";
+}
+function collectOre(){
+  let r=Math.random(),bonus=Math.max(0,data.mineDepth-1);
+  if(r<.015+bonus*.001){data.diamond++;log("💎 광산에서 다이아 발견!")}
+  else if(r<.12+bonus*.002){data.goldOre++;log("🟡 금광석 발견!")}
+  else if(r<.48){data.iron++;log("⛓️ 철광석 발견!")}
+  else{data.coal++;log("🪨 석탄 발견!")}
+  if(Math.random()<.01){let chest=20+data.mineDepth*15;data.money+=chest;log(`🎁 광산 보물상자! +${chest}💰`)}
+  save();updateUI()
+}
+function openMine(){document.getElementById("mineBox").style.display="block";startMine();updateUI()}
+function closeMine(){document.getElementById("mineBox").style.display="none"}
+function sellOre(){
+  let value=data.coal*2+data.iron*6+data.goldOre*20+data.diamond*100;
+  if(!value){log("⛏️ 판매할 광석이 없습니다.");return}
+  data.money+=value;data.coal=data.iron=data.goldOre=data.diamond=0;save();updateUI();log(`💰 광석 판매 완료! +${value}골드`)
+}
+function upgradePick(){
+  let cost=Math.floor(150*Math.pow(1.5,data.pickLevel-1));
+  if(data.money<cost){log(`💰 곡괭이 강화에는 ${cost}골드가 필요합니다.`);return}
+  data.money-=cost;data.pickLevel++;save();updateUI();log(`⛏️ 곡괭이 ${data.pickLevel}강! 채굴 속도 증가`)
+}
+function mineDeeper(){
+  let cost=Math.floor(300*Math.pow(1.7,data.mineDepth-1));
+  if(data.money<cost){log(`💰 ${cost}골드가 필요합니다.`);return}
+  data.money-=cost;data.mineDepth++;save();updateUI();log(`🕳️ 광산 ${data.mineDepth}층으로 내려갔습니다! 희귀 광석 확률 증가`)
+}
+
+/* 뽑기 */
+function openGacha(){gachaBox.style.display="block";gachaTickets.textContent=data.tickets}
+function closeGacha(){gachaBox.style.display="none"}
+function drawGacha(){
+  if(data.tickets<=0){gachaResult.textContent="🎟️ 뽑기권이 없습니다!";return}
+  data.tickets--;let r=Math.random()*100,item;
+  if(r<.5)item={name:"🌌 신화의 검",grade:"신화",power:500};
+  else if(r<5)item={name:"🌟 전설의 검",grade:"전설",power:200};
+  else if(r<20)item={name:"💎 영웅의 검",grade:"영웅",power:80};
+  else if(r<50)item={name:"🔷 희귀한 검",grade:"희귀",power:35};
+  else item={name:"🗡️ 철검",grade:"일반",power:10};
+  data.attack+=item.power;gachaResult.innerHTML=`${item.name}<br><small>${item.grade}</small><br>⚔️ 공격력 +${item.power}`;save();updateUI();log(`🎲 ${item.grade} ${item.name} 획득! 공격력 +${item.power}`)
+}
+function openChance(){chanceBox.style.display="block"}function closeChance(){chanceBox.style.display="none"}
+function toggleSound(){soundOn=!soundOn;soundBtn.textContent=soundOn?"🔊 브금 ON":"🔇 브금 OFF";if(soundOn&&playing)playMusic();else bgm.pause()}
+
+/* 스테이지 초기화: 스테이지 관련만 초기화 */
+function resetStage(){
+  if(!confirm("스테이지를 1로 초기화할까요?\n\n스테이지/현재 처치수만 초기화됩니다.\n골드, 공격력, 검 강화, 광산, 누적 처치, 뽑기권은 유지됩니다."))return;
+  playing=false;paused=false;clearInterval(spawnTimer);clearInterval(attackTimer);monsters.forEach(m=>m.remove());monsters=[];
+  data.stage=1;data.stageKills=0;playerHP=MAX_HP;save();updateUI();startBtn.disabled=false;pauseBtn.textContent="⏸️ 일시정지";gameOverBox.style.display="none";clearScreen.style.display="none";log("🔄 스테이지가 1로 초기화되었습니다.")
+}
+updateUI();startMine();
+</script>
+</body>
+</html>
